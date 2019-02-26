@@ -1,0 +1,61 @@
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Used by: https://github.com/GoogleCloudPlatform/gke-vault-demo
+# Path: k8s-manifests/sample.yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: samplepod
+  labels:
+    app: samplepod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: samplepod
+  template:
+    metadata:
+      labels:
+        app: samplepod
+    spec:
+      # Holds the Vault ca.pem (public certificate) from the vault-tls configmap
+      volumes:
+      - name: vault-tls
+        secret:
+          secretName: vault-tls
+      containers:
+      # A simple alpine container with the Google Cloud SDK installed
+      # See: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
+      - name: app
+        image: google/cloud-sdk:228.0.0-alpine
+        imagePullPolicy: Always
+        command: ["/bin/bash"]
+        args: ["-c", "tail -f /dev/null"]
+        env:
+        # Set the content of the vault_addr key in the vault configmap
+        # automatically to the VAULT_ADDR environment variable.
+        - name: VAULT_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: vault
+              key: vault_addr
+        # Set the VAULT_CACERT environment variable to the ca.pem path
+        - name: VAULT_CACERT
+          value: /etc/vault/tls/ca.pem
+        volumeMounts:
+        # Mount the vault-tls configmap as files in /etc/vault/tls
+        - mountPath: /etc/vault/tls
+          name: vault-tls

@@ -1,0 +1,149 @@
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Used by: https://github.com/GoogleCloudPlatform/gke-vault-demo
+# Path: k8s-manifests/sidecar.yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kv-sidecar
+  labels:
+    app: kv-sidecar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kv-sidecar
+  template:
+    metadata:
+      labels:
+        app: kv-sidecar
+    spec:
+      volumes:
+      # Holds the sensitive secrets data in a memory-backed filesystem so that
+      # they are never written to the host's disk.
+      - name: secrets
+        emptyDir:
+          medium: Memory
+      # Holds the Vault ca.pem (public certificate) from the vault-tls configmap.
+      - name: vault-tls
+        secret:
+          secretName: vault-tls
+      # Holds the vault token file in a memory-backed filesystem so that
+      # the token is never written to the host's disk.
+      - name: vault-token
+        emptyDir:
+          medium: Memory
+
+      initContainers:
+      # The vault-authenticator container authenticates the container using the
+      # kubernetes auth method and puts the resulting token on the filesystem.
+      - name: vault-authenticator
+        image: registry.hub.docker.com/sethvargo/vault-kubernetes-authenticator:0.1.0
+        imagePullPolicy: Always
+        volumeMounts:
+        # The mount where the vault token will be written after login
+        # to "pass" it to the actual pod app containers.
+        - name: vault-token
+          mountPath: /home/vault
+        # Mount the vault-tls configmap as files in /etc/vault/tls.
+        - name: vault-tls
+          mountPath: /etc/vault/tls
+        env:
+        # Specify that the vault client token should be written to the
+        # location that is on a memory filesytem.
+        - name: TOKEN_DEST_PATH
+          value: /home/vault/.vault-token
+        # Set the content of the vault_addr key in the vault configmap
+        # automatically to the VAULT_ADDR environment variable.
+        - name: VAULT_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: vault
+              key: vault_addr
+        # Set the VAULT_CACERT environment variable to the ca.pem path.
+        - name: VAULT_CACERT
+          value: /etc/vault/tls/ca.pem
+        # Set the role to use when connecting to Vault to obtain secret data.
+        - name: VAULT_ROLE
+          value: myapp-role
+
+      containers:
+        # The consul-template container will pull secrets from Vault and expose
+        # them as files on disk.  This is the "sidecar" container.
+      - name: consul-template
+        image: registry.hub.docker.com/sethvargo/consul-template:0.19.5.dev-alpine
+        imagePullPolicy: Always
+        volumeMounts:
+        # The path to write the secret data/files from vault to "share" with
+        # the application container
+        - name: secrets
+          mountPath: /etc/secrets
+        # Set the VAULT_CACERT environment variable to the ca.pem path.
+        - name: vault-tls
+          mountPath: /etc/vault/tls
+        # Mount the vault token location populated by the init container.
+        - name: vault-token
+          mountPath: /home/vault
+        env:
+        # Sets HOME so that consul-template can pick up the vault token in the
+        # default location in the ${HOME} directory.
+        - name: HOME
+          value: /home/vault
+        # Set the content of the vault_addr key in the vault configmap
+        # automatically to the VAULT_ADDR environment variable.
+        - name: VAULT_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: vault
+              key: vault_addr
+        # Set the VAULT_CACERT environment variable to the ca.pem path.
+        - name: VAULT_CACERT
+          value: /etc/vault/tls/ca.pem
+        # Consul-templates inline configuration file.
+        # This is typically separated out, but is shown inline
+        # for ease of demo readability.
+        - name: CT_LOCAL_CONFIG
+          value: |
+            vault {
+              ssl {
+                ca_cert = "/etc/vault/tls/ca.pem"
+              }
+
+              retry {
+                backoff = "1s"
+              }
+            }
+
+            template {
+              contents = <<EOH
+            ---
+            {{- with secret "secret/myapp/config" }}
+            apikey: {{ .Data.apikey }}
+            {{- end }}
+            EOH
+              destination = "/etc/secrets/config"
+            }
+      # The primary application container.  Expects to find the secret
+      # data from Vault in /etc/secrets via the "secrets" volumemount.
+      - name: app
+        image: registry.hub.docker.com/sethvargo/vault-demo-app:0.1.0
+        imagePullPolicy: Always
+        volumeMounts:
+        # The volume shared by the sidecar container where the secret
+        # data/files are written.  This application container simply
+        # reads from the files in this location to do its work.
+        - name: secrets
+          mountPath: /etc/secrets
