@@ -35,6 +35,7 @@ metadata:
   labels:
     jenkins: build-node
 spec:
+  automountServiceAccountToken: false
   containers:
   - name: ${containerName}
     image: gcr.io/pso-helmsman-cicd/jenkins-k8s-node:${env.CONTAINER_VERSION}
