@@ -106,6 +106,7 @@ spec:
    finally {
      stage('Teardown') {
       container(containerName) {
+        sh "sleep 600"
         sh "make teardown"
         sh "gcloud auth revoke"
       }
