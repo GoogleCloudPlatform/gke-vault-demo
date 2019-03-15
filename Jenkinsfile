@@ -25,8 +25,7 @@ limitations under the License.
 def label = "k8s-infra"
 def containerName = "k8s-node"
 def GOOGLE_APPLICATION_CREDENTIALS    = '/home/jenkins/dev/jenkins-deploy-dev-infra.json'
-// Tells the ./scripts/common.sh to install the vault CLI binary of VAULT_VERSION
-def IS_CI_ENV = 'true'
+// Tells the ./scripts/common.sh which VAULT_VERSION of the vault CLI binary to use
 def VAULT_VERSION = '1.0.2'
 
 podTemplate(label: label, yaml: """
@@ -58,8 +57,6 @@ spec:
     properties([disableConcurrentBuilds()])
     // set env variable GOOGLE_APPLICATION_CREDENTIALS for Terraform
     env.GOOGLE_APPLICATION_CREDENTIALS=GOOGLE_APPLICATION_CREDENTIALS
-    // set env variable for the validate script to know it's in a CI environment
-    env.IS_CI_ENV=IS_CI_ENV
 
     stage('Setup') {
         container(containerName) {

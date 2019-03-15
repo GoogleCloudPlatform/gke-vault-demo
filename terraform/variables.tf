@@ -16,7 +16,7 @@ limitations under the License.
 
 // Required variables
 variable "project" {
-  description = "The name of the project in which to create the Kubernetes clusters."
+  description = "The name of the project in which to create the Application Kubernetes cluster."
   type        = "string"
 }
 
@@ -28,6 +28,17 @@ variable "billing_account" {
 variable "org_id" {
   description = "The organization to hold the newly created project."
   type        = "string"
+}
+
+// If specified, this project ID is passed to the vault-on-gke module
+// to use an existing project name for the vault cluster.  If omitted,
+// the vault-on-gke module generates one for you in the format of
+// vault-XXXXXXX by default.
+variable "vault_project" {
+  description = "The name of the project in which to create the Vault Demo App Kubernetes cluster."
+  type        = "string"
+
+  default = ""
 }
 
 // Optional variables

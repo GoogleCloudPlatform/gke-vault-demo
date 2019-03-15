@@ -19,4 +19,5 @@ module "vault" {
   org_id                                = "${var.org_id}"
   billing_account                       = "${var.billing_account}"
   kubernetes_master_authorized_networks = "${var.kubernetes_master_authorized_networks}"
+  project                               = "${var.vault_project}"
 }

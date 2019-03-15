@@ -57,6 +57,8 @@ command -v vault >/dev/null 2>&1 || { \
 
 # Set false if the ENV var isn't already set/present
 IS_CI_ENV=${IS_CI_ENV:-false}
+# Set empty if the ENV var isn't already set/present
+VAULT_PROJECT_ID=${VAULT_PROJECT_ID:-}
 # Release ID of the desired version of vault
 VAULT_VERSION=${VAULT_VERSION:-"1.0.2"}
 
