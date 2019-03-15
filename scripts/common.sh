@@ -47,14 +47,6 @@ command -v kubectl >/dev/null 2>&1 || { \
  exit 1
 }
 
-# Make sure vault is installed.  If not, refer to:
-# https://learn.hashicorp.com/vault/getting-started/install
-command -v vault >/dev/null 2>&1 || { \
- echo >&2 "I require vault but it's not installed.  Aborting."
- echo >&2 "Refer to: https://learn.hashicorp.com/vault/getting-started/install"
- exit 1
-}
-
 # Set false if the ENV var isn't already set/present
 IS_CI_ENV=${IS_CI_ENV:-false}
 # Set empty if the ENV var isn't already set/present
@@ -86,6 +78,14 @@ if [[ "${IS_CI_ENV}" == "true" ]]; then
     export PATH="${ROOT}/bin:$PATH"
   fi
 fi
+
+# Make sure vault is installed.  If not, refer to:
+# https://learn.hashicorp.com/vault/getting-started/install
+command -v vault >/dev/null 2>&1 || { \
+ echo >&2 "I require vault but it's not installed.  Aborting."
+ echo >&2 "Refer to: https://learn.hashicorp.com/vault/getting-started/install"
+ exit 1
+}
 
 # Set specific ENV variables used by the Google Gloud SDK
 PROJECT="$(gcloud config get-value core/project)"
