@@ -74,9 +74,9 @@ if [[ "${IS_CI_ENV}" == "true" ]]; then
     mv "${ROOT}/vault" "${ROOT}/bin/vault"
     chmod +x "${ROOT}/bin/vault"
 
-    # Add the local bin directory to the CI $PATH
-    export PATH="${ROOT}/bin:$PATH"
   fi
+  # Add the local bin directory to the CI $PATH
+  export PATH="${ROOT}/bin:$PATH"
 fi
 
 # Make sure vault is installed.  If not, refer to:
