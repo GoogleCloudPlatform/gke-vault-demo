@@ -16,9 +16,9 @@ limitations under the License.
 
 # Add user-specified roles
 resource "google_project_iam_member" "service-account" {
-  count   = "${length(var.service_account_roles)}"
-  project = "${var.project}"
-  role    = "${element(var.service_account_roles, count.index)}"
-  member  = "serviceAccount:vault-server@${module.vault.project}.iam.gserviceaccount.com"
+  count      = "${length(var.service_account_roles)}"
+  project    = "${var.project}"
+  role       = "${element(var.service_account_roles, count.index)}"
+  member     = "serviceAccount:vault-server@${module.vault.project}.iam.gserviceaccount.com"
   depends_on = ["module.vault"]
 }

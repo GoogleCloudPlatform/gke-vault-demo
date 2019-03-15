@@ -15,21 +15,21 @@ limitations under the License.
 */
 
 output "vault-address" {
-    value = "${module.vault.address}"
+  value = "${module.vault.address}"
 }
 
 output "vault-root-token" {
-    value = "${module.vault.root_token}"
+  value = "${module.vault.root_token}"
 }
 
 output "vault-project" {
-    value = "${module.vault.project}"
+  value = "${module.vault.project}"
 }
 
 output "vault-region" {
-    value = "${module.vault.region}"
+  value = "${module.vault.region}"
 }
 
 output "application-cluster-name" {
-    value = "${var.application_cluster_name}"
+  value = "${var.application_cluster_name}"
 }
