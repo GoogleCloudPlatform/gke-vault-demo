@@ -108,7 +108,7 @@ fi
 # The vault-on-gke module requires these to be set to be able to create
 # new GCP projects, but we are also passing an existing project ID from
 # our env VAULT_PROJECT_ID variable which bypasses the project creation
-# step.  When in 
+# step.
 BILLING_ACCOUNT=""
 ORG_ID=""
 # If this is not running in CI, obtain the needed env VARS for vault-on-gke
@@ -121,7 +121,7 @@ if [[ "${IS_CI_ENV}" != "true" ]]; then
       echo "Visit https://cloud.google.com/billing/docs/how-to/modify-project#enable_billing_for_an_existing_project."
       exit 1;
   fi
-  
+
   ORG_ID="$(gcloud organizations list --format='value(name.basename())')"
   if [[ -z "${ORG_ID}" ]]; then
       echo "There was an error obtaining the organization ID for the current configuration."
