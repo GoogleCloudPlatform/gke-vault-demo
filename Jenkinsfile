@@ -44,11 +44,18 @@ spec:
     # Mount the dev service account key
     - name: dev-key
       mountPath: /home/jenkins/dev
+    # Mount the host /dev/urandom to /dev/random for entropy
+    - name: random
+      mountPath: /dev/random
   volumes:
   # Create a volume that contains the dev json key that was saved as a secret
   - name: dev-key
     secret:
       secretName: jenkins-deploy-dev-infra
+  # Host /dev/urandom to allow for entropy access
+  - name: random
+    hostPath:
+      path: /dev/urandom
 """
  ) {
  node(label) {
