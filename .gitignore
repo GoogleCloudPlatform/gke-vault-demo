@@ -27,6 +27,8 @@ terraform.tfvars
 
 # TLS keys
 tls/*
+# Keep the .keep file so the directory is available during cert creation
+!tls/.keep
 
 # Vault tokens
 token.json

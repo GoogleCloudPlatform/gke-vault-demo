@@ -52,4 +52,10 @@ kubernetes_master_authorized_networks = [
   },
 ]
 EOF
+    if [[ ! -z "${VAULT_PROJECT_ID}" ]]
+    then
+    cat <<EOF >> "${TFVARS_FILE}"
+vault_project="${VAULT_PROJECT_ID}"
+EOF
+    fi
 fi

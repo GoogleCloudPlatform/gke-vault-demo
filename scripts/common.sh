@@ -47,16 +47,10 @@ command -v kubectl >/dev/null 2>&1 || { \
  exit 1
 }
 
-# Make sure vault is installed.  If not, refer to:
-# https://learn.hashicorp.com/vault/getting-started/install
-command -v vault >/dev/null 2>&1 || { \
- echo >&2 "I require vault but it's not installed.  Aborting."
- echo >&2 "Refer to: https://learn.hashicorp.com/vault/getting-started/install"
- exit 1
-}
-
 # Set false if the ENV var isn't already set/present
 IS_CI_ENV=${IS_CI_ENV:-false}
+# Set empty if the ENV var isn't already set/present
+VAULT_PROJECT_ID=${VAULT_PROJECT_ID:-}
 # Release ID of the desired version of vault
 VAULT_VERSION=${VAULT_VERSION:-"1.0.2"}
 
@@ -80,10 +74,18 @@ if [[ "${IS_CI_ENV}" == "true" ]]; then
     mv "${ROOT}/vault" "${ROOT}/bin/vault"
     chmod +x "${ROOT}/bin/vault"
 
-    # Add the local bin directory to the CI $PATH
-    export PATH="${ROOT}/bin:$PATH"
   fi
+  # Add the local bin directory to the CI $PATH
+  export PATH="${ROOT}/bin:$PATH"
 fi
+
+# Make sure vault is installed.  If not, refer to:
+# https://learn.hashicorp.com/vault/getting-started/install
+command -v vault >/dev/null 2>&1 || { \
+ echo >&2 "I require vault but it's not installed.  Aborting."
+ echo >&2 "Refer to: https://learn.hashicorp.com/vault/getting-started/install"
+ exit 1
+}
 
 # Set specific ENV variables used by the Google Gloud SDK
 PROJECT="$(gcloud config get-value core/project)"
@@ -103,17 +105,28 @@ if [[ -z "${REGION}" ]]; then
     exit 1;
 fi
 
-BILLING_ACCOUNT="$(gcloud beta billing accounts list --format='value(name.basename())')"
-if [[ -z "${BILLING_ACCOUNT}" ]]; then
-    echo "Your gcloud project must have a billing account set up."
-    echo "Visit https://cloud.google.com/billing/docs/how-to/modify-project#enable_billing_for_an_existing_project."
-    exit 1;
-fi
+# The vault-on-gke module requires these to be set to be able to create
+# new GCP projects, but we are also passing an existing project ID from
+# our env VAULT_PROJECT_ID variable which bypasses the project creation
+# step.
+BILLING_ACCOUNT=""
+ORG_ID=""
+# If this is not running in CI, obtain the needed env VARS for vault-on-gke
+if [[ "${IS_CI_ENV}" != "true" ]]; then
 
-ORG_ID="$(gcloud organizations list --format='value(name.basename())')"
-if [[ -z "${ORG_ID}" ]]; then
-    echo "There was an error obtaining the organization ID for the current configuration."
-    exit 1;
+  # Ensures the two env VARS needed by vault-on-gke to create projects are set
+  BILLING_ACCOUNT="$(gcloud beta billing accounts list --format='value(name.basename())')"
+  if [[ -z "${BILLING_ACCOUNT}" ]]; then
+      echo "Your gcloud project must have a billing account set up."
+      echo "Visit https://cloud.google.com/billing/docs/how-to/modify-project#enable_billing_for_an_existing_project."
+      exit 1;
+  fi
+
+  ORG_ID="$(gcloud organizations list --format='value(name.basename())')"
+  if [[ -z "${ORG_ID}" ]]; then
+      echo "There was an error obtaining the organization ID for the current configuration."
+      exit 1;
+  fi
 fi
 
 # Exports vault-specific items to the current shell's ENV to aid in vault cli usage.

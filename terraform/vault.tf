@@ -15,8 +15,9 @@ limitations under the License.
 */
 
 module "vault" {
-  source = "github.com/sethvargo/vault-on-gke//terraform"
-  org_id = "${var.org_id}"
-  billing_account = "${var.billing_account}"
+  source                                = "github.com/sethvargo/vault-on-gke//terraform"
+  org_id                                = "${var.org_id}"
+  billing_account                       = "${var.billing_account}"
   kubernetes_master_authorized_networks = "${var.kubernetes_master_authorized_networks}"
+  project                               = "${var.vault_project}"
 }

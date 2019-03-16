@@ -16,29 +16,40 @@ limitations under the License.
 
 // Required variables
 variable "project" {
-  description = "The name of the project in which to create the Kubernetes clusters."
-  type = "string"
+  description = "The name of the project in which to create the Application Kubernetes cluster."
+  type        = "string"
 }
 
 variable "billing_account" {
   description = "The billing_account ID to attach to the project for attributing costs."
-  type = "string"
+  type        = "string"
 }
 
 variable "org_id" {
   description = "The organization to hold the newly created project."
-  type = "string"
+  type        = "string"
+}
+
+// If specified, this project ID is passed to the vault-on-gke module
+// to use an existing project name for the vault cluster.  If omitted,
+// the vault-on-gke module generates one for you in the format of
+// vault-XXXXXXX by default.
+variable "vault_project" {
+  description = "The name of the project in which to create the Vault Demo App Kubernetes cluster."
+  type        = "string"
+
+  default = ""
 }
 
 // Optional variables
 variable "region" {
   description = "The region in which the GKE clusters will run."
-  default = "us-west1"
+  default     = "us-west1"
 }
 
 variable "gke_master_version" {
   description = "The minimum version to use for the GKE control plane."
-  default = "latest"
+  default     = "latest"
 }
 
 variable "application_cluster_name" {
@@ -64,6 +75,7 @@ variable "app_project_services" {
     "logging.googleapis.com",
     "monitoring.googleapis.com",
   ]
+
   description = "The APIs that will be enabled in the application cluster project."
 }
 
@@ -78,8 +90,8 @@ EOF
 }
 
 variable "daily_maintenance_window" {
-  type    = "string"
-  default = "06:00"
+  type        = "string"
+  default     = "06:00"
   description = "The 4 hr block each day when we want GKE to perform maintenance if needed."
 }
 
@@ -160,6 +172,7 @@ variable "service_account_roles" {
     "roles/iam.serviceAccountAdmin",
     "roles/resourcemanager.projectIamAdmin",
   ]
+
   description = <<EOF
 List of roles to be granted to the vault-server SA in this application cluster
 project for managing SAs and SA Keys.

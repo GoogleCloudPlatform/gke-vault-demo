@@ -18,7 +18,7 @@ limitations under the License.
 // https://www.terraform.io/docs/providers/google/d/google_container_engine_versions.html
 data "google_container_engine_versions" "gke_version" {
   project = "${var.project}"
-  region = "${var.region}"
+  region  = "${var.region}"
 }
 
 # Create the dedicated GKE service account for the application cluster
@@ -127,12 +127,12 @@ resource "google_container_cluster" "app" {
     services_secondary_range_name = "${google_compute_subnetwork.app-subnetwork.secondary_ip_range.1.range_name}"
   }
 
-   # Specify the list of CIDRs which can access the GKE API Server
+  # Specify the list of CIDRs which can access the GKE API Server
   master_authorized_networks_config {
     cidr_blocks = ["${var.kubernetes_master_authorized_networks}"]
   }
 
-   # Configure the cluster to be private (not have public facing IPs)
+  # Configure the cluster to be private (not have public facing IPs)
   private_cluster_config {
     # This field is misleading. This prevents access to the master API from
     # any external IP. While that might represent the most secure
@@ -141,7 +141,7 @@ resource "google_container_cluster" "app" {
     # can talk to that endpoint.
     enable_private_endpoint = false
 
-     enable_private_nodes   = true
+    enable_private_nodes   = true
     master_ipv4_cidr_block = "${var.kubernetes_masters_ipv4_cidr}"
   }
 
