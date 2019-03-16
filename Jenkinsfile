@@ -108,7 +108,6 @@ spec:
      stage('Teardown') {
       container(containerName) {
         sh "make teardown"
-        sh "gcloud auth revoke"
       }
      }
    }
