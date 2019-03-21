@@ -7,7 +7,7 @@
 * [Inital Setup](#initial-setup)
   * [Configure gcloud](#configure-gcloud)
   * [Get the code](#get-the-code)
-* [Tools](#tools))
+* [Tools](#tools)
   * [Install Cloud SDK](#install-cloud-sdk)
   * [Install Kubectl](#install-kubectl)
   * [Install Terraform](#install-terraform)
