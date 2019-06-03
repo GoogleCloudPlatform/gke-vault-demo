@@ -17,5 +17,27 @@ limitations under the License.
 // Configles the Google Cloud Provider with default settings
 provider "google" {
   project = "${var.project}"
-  version = "~> 1.13"
+  version = "~> 2.5.1"
+}
+provider "google-beta" {
+  project = "${var.project}"
+  version = "~> 2.5.1"
+}
+provider "http" {
+  version = "~> 1.0.0"
+}
+provider "kubernetes" {
+  version = "~> 1.6.0"
+}
+provider "null" {
+  version = "~> 2.1.2"
+}
+provider "random" {
+  version = "~> 2.1.2"
+}
+provider "template" {
+  version = "~> 2.1.2"
+}
+provider "tls" {
+  version = "~> 1.2.0"
 }
