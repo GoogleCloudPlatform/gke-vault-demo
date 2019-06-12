@@ -18,7 +18,7 @@ limitations under the License.
 // https://www.terraform.io/docs/providers/google/d/google_container_engine_versions.html
 data "google_container_engine_versions" "gke_version" {
   project = "${var.project}"
-  region  = "${var.region}"
+  location  = "${var.region}"
 }
 
 # Create the dedicated GKE service account for the application cluster
@@ -42,9 +42,10 @@ resource "google_project_service" "app_service" {
 
 # Create the GKE cluster
 resource "google_container_cluster" "app" {
-  name    = "${var.application_cluster_name}"
-  project = "${var.project}"
-  region  = "${var.region}"
+  provider  = "google-beta"
+  name      = "${var.application_cluster_name}"
+  project   = "${var.project}"
+  location  = "${var.region}"
 
   network    = "${google_compute_network.app-network.self_link}"
   subnetwork = "${google_compute_subnetwork.app-subnetwork.self_link}"
