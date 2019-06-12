@@ -60,12 +60,12 @@ vault kv put secret/myapp/config \
   apikey='MYAPIKEYHERE'
 
 # install the auto-init sidecar
-kubectl apply -f "${ROOT}/k8s-manifests/sidecar.yaml" #2> /dev/null 1> /dev/null
+kubectl apply -n default -f "${ROOT}/k8s-manifests/sidecar.yaml" #2> /dev/null 1> /dev/null
 
 # Loop for up to 180 seconds waiting for vault to be ready
 SECRETSREADY=""
 for _ in {1..90}; do
-  SECRETSREADY=$(kubectl exec -it "$(kubectl get pod -l "app=kv-sidecar" -o jsonpath="{.items[0].metadata.name}")" -c app -- cat /etc/secrets/config | grep "apikey")
+  SECRETSREADY=$(kubectl exec -it -n default "$(kubectl get pod -n default -l "app=kv-sidecar" -o jsonpath="{.items[0].metadata.name}")" -c app -- cat /etc/secrets/config | grep "apikey")
   [ ! -z "$SECRETSREADY" ] && break
   sleep 2
 done
