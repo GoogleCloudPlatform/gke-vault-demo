@@ -28,7 +28,7 @@ def GOOGLE_APPLICATION_CREDENTIALS    = '/home/jenkins/dev/jenkins-deploy-dev-in
 // Tells the ./scripts/common.sh which VAULT_VERSION of the vault CLI binary to use
 def VAULT_VERSION = '1.0.2'
 
-podTemplate(label: label, yaml: """
+podTemplate(namespace: "jenkins", podRetention: "onFailure()", activeDeadlineSeconds: 900, label: label, yaml: """
 apiVersion: v1
 kind: Pod
 metadata:
@@ -86,7 +86,6 @@ spec:
 
     stage('Create') {
         container(containerName) {
-          sh "sleep 3600"
           sh "make create"
         }
     }
