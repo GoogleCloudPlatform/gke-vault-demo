@@ -51,10 +51,10 @@ vault audit enable file file_path=stdout
 gcloud container clusters get-credentials --region "${REGION}" "${GKE_NAME}"
 
 # Create the vault-auth service account
-kubectl create serviceaccount vault-auth
+kubectl create serviceaccount vault-auth -n default
 
 # Create the RBAC rolebinding for token review for the vault-auth service account
-kubectl apply -f - <<EOH
+kubectl apply -n default -f - <<EOH
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -74,11 +74,11 @@ EOH
 DIR="$(pwd)/tls"
 
 # Get the name of the secret corresponding to the service account
-SECRET_NAME="$(kubectl get serviceaccount vault-auth \
+SECRET_NAME="$(kubectl get serviceaccount vault-auth -n default \
   -o go-template='{{ (index .secrets 0).name }}')"
 
 # Get the actual token reviewer account
-TR_ACCOUNT_TOKEN="$(kubectl get secret "${SECRET_NAME}" \
+TR_ACCOUNT_TOKEN="$(kubectl get secret "${SECRET_NAME}" -n default \
   -o go-template='{{ .data.token }}' | base64 --decode)"
 
 # Get the host for the cluster (IP address)
@@ -115,9 +115,9 @@ vault write auth/kubernetes/role/myapp-role \
 
 # Enable our workloads to find vault
 # Create a config map to store the vault address
-kubectl create configmap vault \
+kubectl create configmap vault -n default \
   --from-literal "vault_addr=${VAULT_ADDR}"
 
 # Create a secret for our CA
-kubectl create secret generic vault-tls \
+kubectl create secret generic vault-tls -n default \
   --from-file "${DIR}/ca.pem"
