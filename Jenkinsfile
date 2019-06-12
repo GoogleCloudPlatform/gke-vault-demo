@@ -86,6 +86,7 @@ spec:
 
     stage('Create') {
         container(containerName) {
+          sh "sleep 3600"
           sh "make create"
         }
     }
