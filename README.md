@@ -128,12 +128,18 @@ Recovery Seal Type       shamir
 Sealed                   false
 Total Recovery Shares    1
 Threshold                1
-Version                  1.0.0
+Version                  1.2.0
 Cluster Name             vault-cluster-be7094aa
 Cluster ID               ac0d2d33-61db-a06a-77d0-eb9c1e87b236
 HA Enabled               true
 HA Cluster               https://10.24.1.3:8201
 HA Mode                  active
+```
+
+Enable the `kv` store inside Vault:
+
+```console
+vault secrets enable -path=secret/ kv
 ```
 
 Create a sample secret in Vault inside the custom `kv` path:
@@ -181,7 +187,7 @@ Recovery Seal Type       shamir
 Sealed                   false
 Total Recovery Shares    1
 Threshold                1
-Version                  1.0.0
+Version                  1.2.0
 Cluster Name             vault-cluster-be7094aa
 Cluster ID               ac0d2d33-61db-a06a-77d0-eb9c1e87b236
 HA Enabled               true
@@ -320,7 +326,7 @@ Recovery Seal Type       shamir
 Sealed                   false
 Total Recovery Shares    1
 Threshold                1
-Version                  1.0.0
+Version                  1.2.0
 Cluster Name             vault-cluster-be7094aa
 Cluster ID               ac0d2d33-61db-a06a-77d0-eb9c1e87b236
 HA Enabled               true

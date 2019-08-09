@@ -16,8 +16,8 @@ limitations under the License.
 
 # Create the storage bucket
 resource "google_storage_bucket" "app" {
-  name          = "${var.project}-gcs"
-  project       = "${var.project}"
+  name          = format("%s-gcs", var.project)
+  project       = var.project
   force_destroy = true
 
   depends_on = ["google_project_service.app_service"]
