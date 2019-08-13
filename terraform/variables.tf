@@ -90,13 +90,13 @@ EOF
 }
 
 variable "daily_maintenance_window" {
-  type        = "string"
-  default     = "06:00"
+  type = "string"
+  default = "06:00"
   description = "The 4 hr block each day when we want GKE to perform maintenance if needed."
 }
 
 variable "kubernetes_network_ipv4_cidr" {
-  type    = "string"
+  type = "string"
   default = "10.0.96.0/22"
 
   description = <<EOF
@@ -116,7 +116,7 @@ EOF
 }
 
 variable "kubernetes_services_ipv4_cidr" {
-  type    = "string"
+  type = "string"
   default = "10.0.88.0/22"
 
   description = <<EOF
@@ -141,7 +141,7 @@ variable "kubernetes_master_authorized_networks" {
   default = [
     {
       display_name = "Anyone"
-      cidr_block   = "0.0.0.0/0"
+      cidr_block = "0.0.0.0/0"
     },
   ]
 
@@ -176,5 +176,17 @@ variable "service_account_roles" {
   description = <<EOF
 List of roles to be granted to the vault-server SA in this application cluster
 project for managing SAs and SA Keys.
+EOF
+}
+
+variable "app_service_account_roles" {
+  type = "list"
+
+  default = [
+    "roles/editor"
+  ]
+
+  description = <<EOF
+List of roles to be granted to the App cluster SA Node Pool.
 EOF
 }

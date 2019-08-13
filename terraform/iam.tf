@@ -14,11 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-# Add user-specified roles
+# Add user-specified roles to App SA
+resource "google_project_iam_member" "app-service-account" {
+  count   = length(var.app_service_account_roles)
+  project = var.project
+  role    = element(var.app_service_account_roles, count.index)
+  member  = format("serviceAccount:gke-vault-demo-app-cluster@%s.iam.gserviceaccount.com", var.project)
+}
+
+# Add user-specified roles to Vault SA
 resource "google_project_iam_member" "service-account" {
-  count      = "${length(var.service_account_roles)}"
-  project    = "${var.project}"
-  role       = "${element(var.service_account_roles, count.index)}"
-  member     = "serviceAccount:vault-server@${module.vault.project}.iam.gserviceaccount.com"
+  count      = length(var.service_account_roles)
+  project    = var.project
+  role       = element(var.service_account_roles, count.index)
+  member     = format("serviceAccount:vault-server@%s.iam.gserviceaccount.com", module.vault.project)
   depends_on = ["module.vault"]
 }

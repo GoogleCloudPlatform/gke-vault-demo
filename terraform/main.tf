@@ -17,22 +17,22 @@ limitations under the License.
 // Provides access to available Google Container Engine versions in a region for a given project.
 // https://www.terraform.io/docs/providers/google/d/google_container_engine_versions.html
 data "google_container_engine_versions" "gke_version" {
-  project = "${var.project}"
-  location  = "${var.region}"
+  project  = var.project
+  location = var.region
 }
 
 # Create the dedicated GKE service account for the application cluster
 resource "google_service_account" "app_cluster" {
   account_id   = "gke-vault-demo-app-cluster"
   display_name = "Application Cluster"
-  project      = "${var.project}"
+  project      = var.project
 }
 
 # Enable required services on the app cluster project
 resource "google_project_service" "app_service" {
-  count   = "${length(var.app_project_services)}"
-  project = "${var.project}"
-  service = "${element(var.app_project_services, count.index)}"
+  count   = length(var.app_project_services)
+  project = var.project
+  service = element(var.app_project_services, count.index)
 
   # Do not disable the service on destroy. On destroy, we are going to
   # destroy the project, but we need the APIs available to destroy the
@@ -42,18 +42,17 @@ resource "google_project_service" "app_service" {
 
 # Create the GKE cluster
 resource "google_container_cluster" "app" {
-  provider  = "google-beta"
-  name      = "${var.application_cluster_name}"
-  project   = "${var.project}"
-  location  = "${var.region}"
+  provider = "google-beta"
+  name     = var.application_cluster_name
+  project  = var.project
+  location = var.region
 
-  network    = "${google_compute_network.app-network.self_link}"
-  subnetwork = "${google_compute_subnetwork.app-subnetwork.self_link}"
+  network    = google_compute_network.app-network.self_link
+  subnetwork = google_compute_subnetwork.app-subnetwork.self_link
 
-  initial_node_count = "${var.num_nodes_per_zone}"
+  initial_node_count = var.num_nodes_per_zone
 
-  min_master_version = "${data.google_container_engine_versions.gke_version.latest_master_version}"
-  node_version       = "${data.google_container_engine_versions.gke_version.latest_node_version}"
+  min_master_version = data.google_container_engine_versions.gke_version.latest_master_version
 
   logging_service    = "logging.googleapis.com"
   monitoring_service = "monitoring.googleapis.com"
@@ -63,18 +62,23 @@ resource "google_container_cluster" "app" {
 
   node_config {
     machine_type    = "n1-standard-1"
-    service_account = "${google_service_account.app_cluster.email}"
+    service_account = google_service_account.app_cluster.email
 
     oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/trace.append"
     ]
 
     # Set metadata on the VM to supply more entropy
-    metadata {
+    metadata = {
       google-compute-enable-virtio-rng = "true"
     }
 
-    labels {
+    labels = {
       service = "applications"
     }
 
@@ -118,19 +122,25 @@ resource "google_container_cluster" "app" {
   # Set the maintenance window.
   maintenance_policy {
     daily_maintenance_window {
-      start_time = "${var.daily_maintenance_window}"
+      start_time = var.daily_maintenance_window
     }
   }
 
   # Allocate IPs in our subnetwork
   ip_allocation_policy {
-    cluster_secondary_range_name  = "${google_compute_subnetwork.app-subnetwork.secondary_ip_range.0.range_name}"
-    services_secondary_range_name = "${google_compute_subnetwork.app-subnetwork.secondary_ip_range.1.range_name}"
+    cluster_secondary_range_name  = google_compute_subnetwork.app-subnetwork.secondary_ip_range.0.range_name
+    services_secondary_range_name = google_compute_subnetwork.app-subnetwork.secondary_ip_range.1.range_name
   }
 
   # Specify the list of CIDRs which can access the GKE API Server
   master_authorized_networks_config {
-    cidr_blocks = ["${var.kubernetes_master_authorized_networks}"]
+    dynamic "cidr_blocks" {
+      for_each = var.kubernetes_master_authorized_networks
+      content {
+        cidr_block   = cidr_blocks.value.cidr_block
+        display_name = cidr_blocks.value.display_name
+      }
+    }
   }
 
   # Configure the cluster to be private (not have public facing IPs)
@@ -143,7 +153,7 @@ resource "google_container_cluster" "app" {
     enable_private_endpoint = false
 
     enable_private_nodes   = true
-    master_ipv4_cidr_block = "${var.kubernetes_masters_ipv4_cidr}"
+    master_ipv4_cidr_block = var.kubernetes_masters_ipv4_cidr
   }
 
   depends_on = [

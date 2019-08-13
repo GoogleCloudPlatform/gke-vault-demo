@@ -99,6 +99,9 @@ vault write auth/kubernetes/config \
   kubernetes_ca_cert="${K8S_CACERT}" \
   token_reviewer_jwt="${TR_ACCOUNT_TOKEN}"
 
+# Enable the KV secrets backend
+vault secrets enable -path=secret/ kv
+
 # Create a policy to be referenced by a role to access the kv location secret/myapp/*
 vault policy write myapp-kv-rw - <<EOF
 path "secret/myapp/*" {

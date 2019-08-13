@@ -1,4 +1,5 @@
 #!/usr/bin/env groovy
+
 /*
 Copyright 2018 Google LLC
 
@@ -22,93 +23,75 @@ limitations under the License.
 // Reference: https://github.com/jenkinsci/kubernetes-plugin
 
 // set up pod label and GOOGLE_APPLICATION_CREDENTIALS (for Terraform)
-def label = "k8s-infra"
-def containerName = "k8s-node"
-def GOOGLE_APPLICATION_CREDENTIALS    = '/home/jenkins/dev/jenkins-deploy-dev-infra.json'
+def containerName = "vault"
+def GOOGLE_APPLICATION_CREDENTIALS = '/home/jenkins/dev/jenkins-deploy-dev-infra.json'
 // Tells the ./scripts/common.sh which VAULT_VERSION of the vault CLI binary to use
-def VAULT_VERSION = '1.0.2'
+def VAULT_VERSION = '1.2.0'
+def jenkins_container_version = env.JENKINS_CONTAINER_VERSION
 
-podTemplate(label: label, yaml: """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    jenkins: build-node
-spec:
-  containers:
-  - name: ${containerName}
-    image: gcr.io/pso-helmsman-cicd/jenkins-k8s-node:${env.CONTAINER_VERSION}
-    command: ['cat']
-    tty: true
-    volumeMounts:
-    # Mount the dev service account key
-    - name: dev-key
-      mountPath: /home/jenkins/dev
-    # Mount the host /dev/urandom to /dev/random for entropy
-    - name: random
-      mountPath: /dev/random
-  volumes:
-  # Create a volume that contains the dev json key that was saved as a secret
-  - name: dev-key
-    secret:
-      secretName: jenkins-deploy-dev-infra
-  # Host /dev/urandom to allow for entropy access
-  - name: random
-    hostPath:
-      path: /dev/urandom
-"""
- ) {
- node(label) {
-  try {
-    // Options covers all other job properties or wrapper functions that apply to entire Pipeline.
-    properties([disableConcurrentBuilds()])
-    // set env variable GOOGLE_APPLICATION_CREDENTIALS for Terraform
-    env.GOOGLE_APPLICATION_CREDENTIALS=GOOGLE_APPLICATION_CREDENTIALS
+podTemplate(
+    containers: [
+        containerTemplate(name: "${containerName}",
+            image: "gcr.io/pso-helmsman-cicd/jenkins-k8s-node:${jenkins_container_version}",
+            command: 'tail -f /dev/null',
+            resourceRequestCpu: '1000m',
+            resourceLimitCpu: '2000m',
+            resourceRequestMemory: '1Gi',
+            resourceLimitMemory: '2Gi'
+        )
+    ],
+    volumes: [secretVolume(mountPath: '/home/jenkins/dev',
+            secretName: 'jenkins-deploy-dev-infra'
+        ),
+        hostPathVolume(mountPath: '/dev/random', hostPath: '/dev/urandom')
+    ]
+) {
+    node(POD_LABEL) {
+        try {
+            // Options covers all other job properties or wrapper functions that apply to entire Pipeline.
+            properties([disableConcurrentBuilds()])
+            // set env variable GOOGLE_APPLICATION_CREDENTIALS for Terraform
+            env.GOOGLE_APPLICATION_CREDENTIALS = GOOGLE_APPLICATION_CREDENTIALS
 
-    stage('Setup') {
-        container(containerName) {
-          // checkout code from scm i.e. commits related to the PR
-          checkout scm
+            stage('Setup') {
+                container(containerName) {
+                    // checkout code from scm i.e. commits related to the PR
+                    checkout scm
 
-          // Setup gcloud service account access
-          sh "gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}"
-          sh "gcloud config set compute/zone ${env.ZONE}"
-          sh "gcloud config set core/project ${env.PROJECT_ID}"
-          sh "gcloud config set compute/region ${env.REGION}"
-         }
-    }
-    stage('Lint') {
-        container(containerName) {
-          sh "make lint"
-      }
-    }
-
-    stage('Create') {
-        container(containerName) {
-          sh "make create"
+                    // Setup gcloud service account access
+                    sh "gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}"
+                    sh "gcloud config set compute/zone ${env.ZONE}"
+                    sh "gcloud config set core/project ${env.PROJECT_ID}"
+                    sh "gcloud config set compute/region ${env.REGION}"
+                }
+            }
+            stage('Lint') {
+                container(containerName) {
+                    sh "make lint"
+                }
+            }
+            stage('Create') {
+                container(containerName) {
+                    sh "make create"
+                }
+            }
+            stage('Validate') {
+                container(containerName) {
+                    sh "make validate"
+                }
+            }
+        } catch (err) {
+            // if any exception occurs, mark the build as failed
+            // and display a detailed message on the Jenkins console output
+            currentBuild.result = 'FAILURE'
+            echo "FAILURE caught echo ${err}"
+            throw err
+        } finally {
+            stage('Teardown') {
+                container(containerName) {
+                    sh "make teardown"
+                }
+            }
         }
     }
-
-    stage('Validate') {
-        container(containerName) {
-          sh "make validate"
-        }
-    }
-
-  }
-   catch (err) {
-      // if any exception occurs, mark the build as failed
-      // and display a detailed message on the Jenkins console output
-      currentBuild.result = 'FAILURE'
-      echo "FAILURE caught echo ${err}"
-      throw err
-   }
-   finally {
-     stage('Teardown') {
-      container(containerName) {
-        sh "make teardown"
-      }
-     }
-   }
-  }
 }
