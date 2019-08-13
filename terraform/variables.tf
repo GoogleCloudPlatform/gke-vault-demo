@@ -178,3 +178,15 @@ List of roles to be granted to the vault-server SA in this application cluster
 project for managing SAs and SA Keys.
 EOF
 }
+
+variable "app_service_account_roles" {
+  type = "list"
+
+  default = [
+    "roles/editor"
+  ]
+
+  description = <<EOF
+List of roles to be granted to the App cluster SA Node Pool.
+EOF
+}
