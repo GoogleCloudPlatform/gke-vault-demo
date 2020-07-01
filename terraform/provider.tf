@@ -21,7 +21,7 @@ provider "google" {
 }
 provider "google-beta" {
   project = var.project
-  version = "~> 2.12.0"
+  version = "~> 2.20.0"
 }
 provider "http" {
   version = "~> 1.1.1"
