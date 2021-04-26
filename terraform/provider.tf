@@ -33,7 +33,7 @@ provider "null" {
   version = "~> 2.1.2"
 }
 provider "random" {
-  version = "~> 2.1.2"
+  version = "~> 3.1.0"
 }
 provider "template" {
   version = "~> 2.1.2"
