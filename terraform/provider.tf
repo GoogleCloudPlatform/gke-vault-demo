@@ -24,7 +24,7 @@ provider "google-beta" {
   version = "~> 2.12.0"
 }
 provider "http" {
-  version = "~> 1.1.1"
+  version = "~> 2.1.0"
 }
 provider "kubernetes" {
   version = "~> 1.8.1"
