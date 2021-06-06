@@ -27,7 +27,7 @@ provider "http" {
   version = "~> 1.1.1"
 }
 provider "kubernetes" {
-  version = "~> 1.8.1"
+  version = "~> 2.3.0"
 }
 provider "null" {
   version = "~> 2.1.2"
