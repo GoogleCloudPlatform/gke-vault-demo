@@ -17,7 +17,7 @@ limitations under the License.
 // Configles the Google Cloud Provider with default settings
 provider "google" {
   project = var.project
-  version = "~> 2.12.0"
+  version = "~> 3.71.0"
 }
 provider "google-beta" {
   project = var.project
